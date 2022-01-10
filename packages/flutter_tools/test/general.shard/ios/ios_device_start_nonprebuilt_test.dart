@@ -170,7 +170,7 @@ void main() {
       Xcode: () => xcode,
     });
 
-    testUsingContext('with buildable app', () async {
+    testUsingContext('with buildable app over USB', () async {
       final IOSDevice iosDevice = setUpIOSDevice(
         fileSystem: fileSystem,
         processManager: processManager,
@@ -219,6 +219,130 @@ void main() {
       expect(fileSystem.directory('build/ios/iphoneos'), exists);
       expect(launchResult.started, true);
       expect(processManager, hasNoRemainingExpectations);
+    }, overrides: <Type, Generator>{
+      ProcessManager: () => processManager,
+      FileSystem: () => fileSystem,
+      Logger: () => logger,
+      Platform: () => macPlatform,
+      XcodeProjectInterpreter: () => fakeXcodeProjectInterpreter,
+      Xcode: () => xcode,
+    });
+
+    testUsingContext('with buildable app over network', () async {
+      final IOSDevice iosDevice = setUpIOSDevice(
+        fileSystem: fileSystem,
+        processManager: processManager,
+        logger: logger,
+        interface: IOSDeviceConnectionInterface.network,
+      );
+      setUpIOSProject(fileSystem);
+      final FlutterProject flutterProject = FlutterProject.fromDirectory(fileSystem.currentDirectory);
+      final BuildableIOSApp buildableIOSApp = BuildableIOSApp(flutterProject.ios, 'flutter', 'My Super Awesome App.app');
+
+      processManager.addCommand(FakeCommand(command: _xattrArgs(flutterProject)));
+      processManager.addCommand(const FakeCommand(command: kRunReleaseArgs));
+      processManager.addCommand(const FakeCommand(command: <String>[...kRunReleaseArgs, '-showBuildSettings']));
+      processManager.addCommand(FakeCommand(
+          command: <String>[
+            'ios-deploy',
+            '--id',
+            '123',
+            '--bundle',
+            'build/ios/iphoneos/My Super Awesome App.app',
+            '--justlaunch',
+            '--args',
+            const <String>[
+              '--enable-dart-profiling',
+              '--enable-service-port-fallback',
+              '--disable-service-auth-codes',
+              '--observatory-port=53781',
+              '--observatory-host=0.0.0.0',
+            ].join(' ')
+          ])
+      );
+
+      final LaunchResult launchResult = await iosDevice.startApp(
+        buildableIOSApp,
+        debuggingOptions: DebuggingOptions.disabled(BuildInfo.release),
+        platformArgs: <String, Object>{},
+      );
+
+      expect(launchResult.started, true);
+      expect(processManager.hasRemainingExpectations, false);
+    }, overrides: <Type, Generator>{
+      ProcessManager: () => processManager,
+      FileSystem: () => fileSystem,
+      Logger: () => logger,
+      Platform: () => macPlatform,
+      XcodeProjectInterpreter: () => fakeXcodeProjectInterpreter,
+      Xcode: () => xcode,
+    });
+
+    testUsingContext('with flaky buildSettings call', () async {
+      LaunchResult launchResult;
+      FakeAsync().run((FakeAsync time) {
+        final IOSDevice iosDevice = setUpIOSDevice(
+          fileSystem: fileSystem,
+          processManager: processManager,
+          logger: logger,
+        );
+        setUpIOSProject(fileSystem);
+        final FlutterProject flutterProject = FlutterProject.fromDirectory(fileSystem.currentDirectory);
+        final BuildableIOSApp buildableIOSApp = BuildableIOSApp(flutterProject.ios, 'flutter', 'My Super Awesome App.app');
+
+        processManager.addCommand(FakeCommand(command: _xattrArgs(flutterProject)));
+        processManager.addCommand(const FakeCommand(command: kRunReleaseArgs));
+        // The first showBuildSettings call should timeout.
+        processManager.addCommand(
+          const FakeCommand(
+            command: <String>[...kRunReleaseArgs, '-showBuildSettings'],
+            duration: Duration(minutes: 5), // this is longer than the timeout of 1 minute.
+          ));
+        // The second call succeedes and is made after the first times out.
+        processManager.addCommand(
+          const FakeCommand(
+            command: <String>[...kRunReleaseArgs, '-showBuildSettings'],
+          ));
+        processManager.addCommand(FakeCommand(
+          command: <String>[
+            'ios-deploy',
+            '--id',
+            '123',
+            '--bundle',
+            'build/ios/iphoneos/My Super Awesome App.app',
+            '--no-wifi',
+            '--justlaunch',
+            '--args',
+            const <String>[
+              '--enable-dart-profiling',
+              '--enable-service-port-fallback',
+              '--disable-service-auth-codes',
+              '--observatory-port=53781',
+            ].join(' ')
+          ])
+        );
+
+        iosDevice.startApp(
+          buildableIOSApp,
+          debuggingOptions: DebuggingOptions.disabled(BuildInfo.release),
+          platformArgs: <String, Object>{},
+        ).then((LaunchResult result) {
+          launchResult = result;
+        });
+
+        // Elapse duration for process timeout.
+        time.flushMicrotasks();
+        time.elapse(const Duration(minutes: 1));
+
+        // Elapse duration for overall process timer.
+        time.flushMicrotasks();
+        time.elapse(const Duration(minutes: 5));
+
+        time.flushTimers();
+      });
+
+      expect(launchResult?.started, true);
+      expect(processManager.hasRemainingExpectations, false);
     }, overrides: <Type, Generator>{
       ProcessManager: () => processManager,
       FileSystem: () => fileSystem,
@@ -305,6 +429,7 @@ IOSDevice setUpIOSDevice({
   FileSystem fileSystem,
   Logger logger,
   ProcessManager processManager,
+  IOSDeviceConnectionInterface interface = IOSDeviceConnectionInterface.usb,
   Artifacts artifacts,
 }) {
   artifacts ??= Artifacts.test();
@@ -338,7 +463,7 @@ IOSDevice setUpIOSDevice({
       cache: cache,
     ),
     cpuArchitecture: DarwinArch.arm64,
-    interfaceType: IOSDeviceConnectionInterface.usb,
+    interfaceType: interface,
   );
 }
 

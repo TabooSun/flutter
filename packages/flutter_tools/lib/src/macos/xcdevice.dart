@@ -83,7 +83,28 @@ class XCDevice {
     );
   }
 
-  bool get isInstalled => _xcode.isInstalledAndMeetsVersionCheck;
+  bool get isInstalled => _xcode.isInstalledAndMeetsVersionCheck && xcdevicePath != null;
+
+  String? _xcdevicePath;
+  String? get xcdevicePath {
+    if (_xcdevicePath == null) {
+      try {
+        _xcdevicePath = _processUtils.runSync(
+          <String>[
+            ..._xcode.xcrunCommand(),
+            '--find',
+            'xcdevice'
+          ],
+          throwOnError: true,
+        ).stdout.trim();
+      } on ProcessException catch (exception) {
+        _logger.printTrace('Process exception finding xcdevice:\n$exception');
+      } on ArgumentError catch (exception) {
+        _logger.printTrace('Argument exception finding xcdevice:\n$exception');
+      }
+    }
+    return _xcdevicePath;
+  }
 
   Future<List<Object>?> _getAllDevices({
     bool useCache = false,
@@ -309,7 +330,7 @@ class XCDevice {
         // Only support USB devices, skip "network" interface (Xcode > Window > Devices and Simulators > Connect via network).
         // TODO(jmagman): Remove this check once wirelessly detected devices can be observed and attached, https://github.com/flutter/flutter/issues/15072.
         if (interface != IOSDeviceConnectionInterface.usb) {
-          continue;
+          // continue;
         }
 
         String? sdkVersion = _sdkVersion(device);

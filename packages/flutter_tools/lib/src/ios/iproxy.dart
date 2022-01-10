@@ -24,9 +24,9 @@ class IProxy {
     required ProcessManager processManager,
     required MapEntry<String, String> dyLdLibEntry,
   }) : _dyLdLibEntry = dyLdLibEntry,
-        _processUtils = ProcessUtils(processManager: processManager, logger: logger),
-        _logger = logger,
-        _iproxyPath = iproxyPath;
+       _processUtils = ProcessUtils(processManager: processManager, logger: logger),
+       _logger = logger,
+       _iproxyPath = iproxyPath;
 
   /// Create a [IProxy] for testing.
   ///
@@ -51,7 +51,7 @@ class IProxy {
   final Logger _logger;
   final MapEntry<String, String> _dyLdLibEntry;
 
-  Future<Process> forward(int devicePort, int hostPort, String deviceId) {
+  Future<Process> forward(int devicePort, int hostPort, String deviceId, IOSDeviceConnectionInterface interfaceType) {
     // Usage: iproxy LOCAL_PORT:DEVICE_PORT --udid UDID
     return _processUtils.start(
       <String>[
@@ -59,6 +59,8 @@ class IProxy {
         '$hostPort:$devicePort',
         '--udid',
         deviceId,
+        if (interfaceType == IOSDeviceConnectionInterface.network)
+          '--network',
         if (_logger.isVerbose)
           '--debug',
       ],

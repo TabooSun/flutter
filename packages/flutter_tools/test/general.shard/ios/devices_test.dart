@@ -240,6 +240,7 @@ void main() {
             processManager: FakeProcessManager.any(),
           ),
           iproxy: iproxy,
+          interfaceType: IOSDeviceConnectionInterface.usb,
         );
         portForwarder.addForwardedPorts(<ForwardedPort>[forwardedPort]);
         return portForwarder;
