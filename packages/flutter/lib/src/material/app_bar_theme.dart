@@ -127,16 +127,16 @@ class AppBarTheme with Diagnosticable {
   /// descendant [AppBar] widgets.
   final double? scrolledUnderElevation;
 
-  /// Overrides the default value of [AppBar.shadowColor] in all
-  /// descendant [AppBar] widgets.
+  /// Overrides the default value for [AppBar.shadowColor] in all
+  /// descendant widgets.
   final Color? shadowColor;
 
-  /// Overrides the default value of [AppBar.surfaceTintColor] in all
-  /// descendant [AppBar] widgets.
+  /// Overrides the default value for [AppBar.surfaceTintColor] in all
+  /// descendant widgets.
   final Color? surfaceTintColor;
 
-  /// Overrides the default value of [AppBar.shape] in all
-  /// descendant [AppBar] widgets.
+  /// Overrides the default value for [AppBar.shape] in all
+  /// descendant widgets.
   final ShapeBorder? shape;
 
   /// Overrides the default value of [AppBar.iconTheme] in all

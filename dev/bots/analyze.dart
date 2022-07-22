@@ -17,7 +17,6 @@ import 'package:meta/meta.dart';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 
-import 'allowlist.dart';
 import 'run_command.dart';
 import 'utils.dart';
 

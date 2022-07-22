@@ -3865,9 +3865,8 @@ abstract class Element extends DiagnosticableTree implements BuildContext {
 
       return newChild;
     } finally {
-      if (isTimelineTracked) {
+      if (isTimelineTracked)
         Timeline.finishSync();
-      }
     }
   }
 

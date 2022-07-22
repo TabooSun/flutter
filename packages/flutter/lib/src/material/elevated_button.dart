@@ -339,12 +339,11 @@ class ElevatedButton extends ButtonStyleButton {
     final ColorScheme colorScheme = theme.colorScheme;
 
     return Theme.of(context).useMaterial3
-      ? _ElevatedButtonDefaultsM3(context)
+      ? _TokenDefaultsM3(context)
       : styleFrom(
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
-          disabledBackgroundColor: colorScheme.onSurface.withOpacity(0.12),
-          disabledForegroundColor: colorScheme.onSurface.withOpacity(0.38),
+          primary: colorScheme.primary,
+          onPrimary: colorScheme.onPrimary,
+          onSurface: colorScheme.onSurface,
           shadowColor: theme.shadowColor,
           elevation: 2,
           textStyle: theme.textTheme.button,
@@ -378,6 +377,21 @@ EdgeInsetsGeometry _scaledPadding(BuildContext context) {
     const EdgeInsets.symmetric(horizontal: 4),
     MediaQuery.maybeOf(context)?.textScaleFactor ?? 1,
   );
+}
+
+@immutable
+class _ElevatedButtonDefaultBackground extends MaterialStateProperty<Color?> with Diagnosticable {
+  _ElevatedButtonDefaultBackground(this.primary, this.onSurface);
+
+  final Color? primary;
+  final Color? onSurface;
+
+  @override
+  Color? resolve(Set<MaterialState> states) {
+    if (states.contains(MaterialState.disabled))
+      return onSurface?.withOpacity(0.12);
+    return primary;
+  }
 }
 
 @immutable
@@ -506,17 +520,15 @@ class _ElevatedButtonWithIconChild extends StatelessWidget {
   }
 }
 
-// BEGIN GENERATED TOKEN PROPERTIES - ElevatedButton
+// BEGIN GENERATED TOKEN PROPERTIES
 
-// Do not edit by hand. The code between the "BEGIN GENERATED" and
-// "END GENERATED" comments are generated from data in the Material
-// Design token database by the script:
-//   dev/tools/gen_defaults/bin/gen_defaults.dart.
+// Generated code to the end of this file. Do not edit by hand.
+// These defaults are generated from the Material Design Token
+// database by the script dev/tools/gen_defaults/bin/gen_defaults.dart.
 
-// Token database version: v0_101
-
-class _ElevatedButtonDefaultsM3 extends ButtonStyle {
-  _ElevatedButtonDefaultsM3(this.context)
+// Generated version v0_92
+class _TokenDefaultsM3 extends ButtonStyle {
+  _TokenDefaultsM3(this.context)
    : super(
        animationDuration: kThemeChangeDuration,
        enableFeedback: true,
@@ -528,38 +540,33 @@ class _ElevatedButtonDefaultsM3 extends ButtonStyle {
 
   @override
   MaterialStateProperty<TextStyle?> get textStyle =>
-    MaterialStatePropertyAll<TextStyle?>(Theme.of(context).textTheme.labelLarge);
+    MaterialStateProperty.all<TextStyle?>(Theme.of(context).textTheme.labelLarge);
 
   @override
   MaterialStateProperty<Color?>? get backgroundColor =>
     MaterialStateProperty.resolveWith((Set<MaterialState> states) {
-      if (states.contains(MaterialState.disabled)) {
+      if (states.contains(MaterialState.disabled))
         return _colors.onSurface.withOpacity(0.12);
-      }
       return _colors.surface;
     });
 
   @override
   MaterialStateProperty<Color?>? get foregroundColor =>
     MaterialStateProperty.resolveWith((Set<MaterialState> states) {
-      if (states.contains(MaterialState.disabled)) {
+      if (states.contains(MaterialState.disabled))
         return _colors.onSurface.withOpacity(0.38);
-      }
       return _colors.primary;
     });
 
   @override
   MaterialStateProperty<Color?>? get overlayColor =>
     MaterialStateProperty.resolveWith((Set<MaterialState> states) {
-      if (states.contains(MaterialState.hovered)) {
+      if (states.contains(MaterialState.hovered))
         return _colors.primary.withOpacity(0.08);
-      }
-      if (states.contains(MaterialState.focused)) {
+      if (states.contains(MaterialState.focused))
         return _colors.primary.withOpacity(0.12);
-      }
-      if (states.contains(MaterialState.pressed)) {
+      if (states.contains(MaterialState.pressed))
         return _colors.primary.withOpacity(0.12);
-      }
       return null;
     });
 
@@ -574,18 +581,14 @@ class _ElevatedButtonDefaultsM3 extends ButtonStyle {
   @override
   MaterialStateProperty<double>? get elevation =>
     MaterialStateProperty.resolveWith((Set<MaterialState> states) {
-      if (states.contains(MaterialState.disabled)) {
+      if (states.contains(MaterialState.disabled))
         return 0.0;
-      }
-      if (states.contains(MaterialState.hovered)) {
+      if (states.contains(MaterialState.hovered))
         return 3.0;
-      }
-      if (states.contains(MaterialState.focused)) {
+      if (states.contains(MaterialState.focused))
         return 1.0;
-      }
-      if (states.contains(MaterialState.pressed)) {
+      if (states.contains(MaterialState.pressed))
         return 1.0;
-      }
       return 1.0;
     });
 
@@ -612,9 +615,8 @@ class _ElevatedButtonDefaultsM3 extends ButtonStyle {
   @override
   MaterialStateProperty<MouseCursor?>? get mouseCursor =>
     MaterialStateProperty.resolveWith((Set<MaterialState> states) {
-      if (states.contains(MaterialState.disabled)) {
+      if (states.contains(MaterialState.disabled))
         return SystemMouseCursors.basic;
-      }
       return SystemMouseCursors.click;
     });
 
@@ -628,4 +630,4 @@ class _ElevatedButtonDefaultsM3 extends ButtonStyle {
   InteractiveInkFeatureFactory? get splashFactory => Theme.of(context).splashFactory;
 }
 
-// END GENERATED TOKEN PROPERTIES - ElevatedButton
+// END GENERATED TOKEN PROPERTIES

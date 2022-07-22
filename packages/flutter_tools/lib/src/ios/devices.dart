@@ -189,13 +189,19 @@ class IOSDevice extends Device {
   }
 
   @override
-  bool get supportsHotReload => interfaceType == IOSDeviceConnectionInterface.usb;
+  bool get supportsHotReload =>
+      interfaceType == IOSDeviceConnectionInterface.usb ||
+      interfaceType == IOSDeviceConnectionInterface.network;
 
   @override
-  bool get supportsHotRestart => interfaceType == IOSDeviceConnectionInterface.usb;
+  bool get supportsHotRestart =>
+      interfaceType == IOSDeviceConnectionInterface.usb ||
+      interfaceType == IOSDeviceConnectionInterface.network;
 
   @override
-  bool get supportsFlutterExit => interfaceType == IOSDeviceConnectionInterface.usb;
+  bool get supportsFlutterExit =>
+      interfaceType == IOSDeviceConnectionInterface.usb ||
+      interfaceType == IOSDeviceConnectionInterface.network;
 
   @override
   final String name;
@@ -352,6 +358,9 @@ class IOSDevice extends Device {
     final List<String> launchArguments = <String>[
       '--enable-dart-profiling',
       '--disable-service-auth-codes',
+      if (interfaceType == IOSDeviceConnectionInterface.network)
+        // Tell the observatory to listen on all interfaces, don't restrict to the loopback.
+        '--observatory-host=${ipv6 ? '::/0' : '0.0.0.0'}',
       if (debuggingOptions.disablePortPublication) '--disable-observatory-publication',
       if (debuggingOptions.startPaused) '--start-paused',
       if (dartVmFlags.isNotEmpty) '--dart-flags="$dartVmFlags"',
@@ -498,6 +507,7 @@ class IOSDevice extends Device {
     iproxy: _iproxy,
     id: id,
     operatingSystemUtils: globals.os,
+    interfaceType: interfaceType,
   );
 
   @visibleForTesting
@@ -814,10 +824,12 @@ class IOSDevicePortForwarder extends DevicePortForwarder {
     required String id,
     required IProxy iproxy,
     required OperatingSystemUtils operatingSystemUtils,
+    required IOSDeviceConnectionInterface interfaceType,
   }) : _logger = logger,
        _id = id,
        _iproxy = iproxy,
-       _operatingSystemUtils = operatingSystemUtils;
+       _operatingSystemUtils = operatingSystemUtils,
+       _interfaceType = interfaceType;
 
   /// Create a [IOSDevicePortForwarder] for testing.
   ///
@@ -839,6 +851,7 @@ class IOSDevicePortForwarder extends DevicePortForwarder {
       ),
       id: id ?? '1234',
       operatingSystemUtils: operatingSystemUtils,
+      interfaceType: IOSDeviceConnectionInterface.usb,
     );
   }
 
@@ -846,6 +859,7 @@ class IOSDevicePortForwarder extends DevicePortForwarder {
   final String _id;
   final IProxy _iproxy;
   final OperatingSystemUtils _operatingSystemUtils;
+  final IOSDeviceConnectionInterface _interfaceType;
 
   @override
   List<ForwardedPort> forwardedPorts = <ForwardedPort>[];
@@ -871,8 +885,8 @@ class IOSDevicePortForwarder extends DevicePortForwarder {
     bool connected = false;
     while (!connected) {
       _logger.printTrace('Attempting to forward device port $devicePort to host port $hostPort');
-      process = await _iproxy.forward(devicePort, hostPort!, _id);
-      // TODO(ianh): This is a flaky race condition, https://github.com/libimobiledevice/libimobiledevice/issues/674
+      process = await _iproxy.forward(devicePort, hostPort!, _id, _interfaceType);
+      // TODO(ianh): This is a flakey race condition, https://github.com/libimobiledevice/libimobiledevice/issues/674
       connected = !await process.stdout.isEmpty.timeout(_kiProxyPortForwardTimeout, onTimeout: () => false);
       if (!connected) {
         process.kill();
