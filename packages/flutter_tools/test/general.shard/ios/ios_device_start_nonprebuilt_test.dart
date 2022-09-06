@@ -209,7 +209,7 @@ void main() {
           const <String>[
             '--enable-dart-profiling',
             '--disable-service-auth-codes',
-          ].join(' ')
+          ].join(' '),
         ])
       );
 
@@ -389,7 +389,7 @@ void main() {
           const <String>[
             '--enable-dart-profiling',
             '--disable-service-auth-codes',
-          ].join(' ')
+          ].join(' '),
         ])
       );
 
